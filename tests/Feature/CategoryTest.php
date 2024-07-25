@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
+use Database\Seeders\CategorySeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
@@ -21,5 +22,70 @@ class CategoryTest extends TestCase
         $result = $category->save();
 
         self::assertTrue($result);
+    }
+
+    public function testInsertMany()
+    {
+        $categories = [];
+        for ($i = 0; $i < 10; $i++) {
+            $categories[] = [
+                "id" => "ID $i",
+                "name" => "Name $i"
+            ];
+        }
+
+        // $result = Category::insert($categories);
+        $result = Category::query()->insert($categories);
+
+        self::assertTrue($result);
+
+        $total = Category::count();
+        // $total = Category::query()->count();
+
+        self::assertEquals(10, $total);
+    }
+
+    public function testFind()
+    {
+        $this->seed(CategorySeeder::class);
+
+        $category = Category::find("FOOD");
+        self::assertNotNull($category);
+        self::assertEquals("FOOD", $category->id);
+        self::assertEquals("Food", $category->name);
+        self::assertEquals("Food Category", $category->description);
+    }
+
+    public function testUpdate()
+    {
+        $this->seed(CategorySeeder::class);
+
+        $category = Category::find("FOOD");
+        $category->name = "Name Food";
+
+
+        $result = $category->update();
+
+        self::assertTrue($result);
+    }
+
+    public function testSelect()
+    {
+        for ($i = 0; $i < 5; $i++) {
+            # code...
+            $category = new Category();
+
+            $category->id = "ID $i";
+            $category->name = "name $i";
+            $category->save();
+        }
+
+        $categories = Category::whereNull("description")->get();
+        self::assertEquals(5, $categories->count());
+        $categories->each(function ($category) {
+            // self::assertNull($category->description);
+            $category->description = "Updated";
+            $category->update();
+        });
     }
 }
