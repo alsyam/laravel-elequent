@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Scopes\isActiveScope;
 use App\Models\Category;
 use Database\Seeders\CategorySeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -166,12 +167,45 @@ class CategoryTest extends TestCase
         $request = [
             "id" => "FOOD",
             "name" => "Food",
-            "description" => "Desc Food",
+            "description" => "Description Food",
         ];
 
         $category = Category::create($request);
 
 
         self::assertNotNull($category->id);
+    }
+
+    public function testUpdateMess()
+    {
+        $this->seed(CategorySeeder::class);
+
+        $request = [
+            "name" => "Food Updated",
+            "description" => "Desc Updated"
+        ];
+
+        $category = Category::find("FOOD");
+        $category->fill($request);
+        $category->save();
+
+        self::assertNotNull($category->id);
+    }
+
+    public function testGlobalScope()
+    {
+        $category = new Category();
+
+        $category->id = "GADGET";
+        $category->name = "Gadget";
+        $category->description = "Gadget Desc";
+        $category->is_active = false;
+        $category->save();
+
+        $category = Category::find("GADGET");
+        self::assertNull($category);
+
+        $category = Category::withoutGlobalScopes([isActiveScope::class])->find("GADGET");
+        self::assertNotNull($category);
     }
 }
